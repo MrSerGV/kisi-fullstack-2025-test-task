@@ -2,6 +2,8 @@ import { Router } from 'express';
 import puppeteer from 'puppeteer';
 import type { Request, Response } from 'express';
 
+import 'dotenv/config';
+
 const router = Router();
 
 interface RenderPDFRequest {
@@ -17,7 +19,23 @@ router.post('/', async (req: Request<{}, {}, RenderPDFRequest>, res: Response) =
     }
 
     try {
-        const browser = await puppeteer.launch();
+        const browser = await puppeteer.launch({
+            executablePath:
+                process.env.NODE_ENV === 'production'
+                    ? '/usr/bin/google-chrome-stable'
+                    : puppeteer.executablePath(),
+            headless: true,
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
+                '--single-process',
+                '--disable-gpu'
+            ]
+        });
         const page = await browser.newPage();
 
         await page.setContent(htmlContent, { waitUntil: 'networkidle2' });
