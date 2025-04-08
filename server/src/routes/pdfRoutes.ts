@@ -17,25 +17,13 @@ router.post('/', async (req: Request<{}, {}, RenderPDFRequest>, res: Response) =
         res.status(400).send('HTML content is required');
         return;
     }
-
     try {
         const browser = await puppeteer.launch({
-            executablePath:
-                process.env.NODE_ENV === 'production'
-                    ? '/usr/bin/google-chrome-stable'
-                    : puppeteer.executablePath(),
+            executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
             headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
-                '--single-process',
-                '--disable-gpu'
-            ]
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
         });
+
         const page = await browser.newPage();
 
         await page.setContent(htmlContent, { waitUntil: 'networkidle2' });
@@ -47,7 +35,7 @@ router.post('/', async (req: Request<{}, {}, RenderPDFRequest>, res: Response) =
         });
 
         await browser.close();
-
+        
         res.set({
             'Content-Type': 'application/pdf',
             'Content-Length': pdfBuffer.length.toString(),
